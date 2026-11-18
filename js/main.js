@@ -1,5 +1,5 @@
 // 音避け：ゲームの進行・操作
-import { Renderer, LANE_COLORS, GATE_COLOR, laneX } from './render.js';
+import { Renderer, LANE_COLORS, GATE_COLOR, laneX, holdX } from './render.js';
 import { Audio } from './audio.js';
 
 const $ = (s) => document.querySelector(s);
@@ -110,7 +110,7 @@ function begin() {
   Audio.unlock();
   const notes = chart.notes.map((n) => ({ ...n, judged: false, done: false, hitPlayer: false, sound: false }));
   let total = 0;
-  for (const n of notes) total += n.type === 'long' ? 2 : 1;
+  for (const n of notes) total += isHold(n) ? 2 : 1;
   const t0 = Audio.now + COUNT_IN + 0.1;
   run = {
     t0,
@@ -256,6 +256,8 @@ document.addEventListener('visibilitychange', () => {
 function overlap(lane) {
   return Math.abs(S.player.x - laneX(lane)) < HIT_RANGE;
 }
+// ロングノーツとスライドノーツ（斜めに流れる）は、しばらく判定ラインに残る
+const isHold = (n) => n.type === 'long' || n.type === 'sweep';
 
 function damage(n) {
   const p = S.player;
@@ -289,8 +291,9 @@ function judge(n, end = false) {
     R.gateBurst();
     R.popup(null, 'PERFECT', GATE_COLOR, 1.2);
   } else {
-    for (const l of n.lanes) R.burst(l, LANE_COLORS[l], !end);
-    R.popup(n.lanes[0], 'PERFECT', LANE_COLORS[n.lanes[0]]);
+    const lanes = n.type === 'sweep' ? [end ? n.to : n.from] : n.lanes;
+    for (const l of lanes) R.burst(l, LANE_COLORS[l], !end);
+    R.popup(lanes[0], 'PERFECT', LANE_COLORS[lanes[0]]);
   }
   updateHud();
 }
@@ -312,7 +315,7 @@ function step() {
       if (p.dead) continue;
       const when = run.t0 + n.t;
       if (when > Audio.now - 0.02) Audio.sfx('hit', n.type === 'gate' ? 0.55 : 0.4, when, Audio.hitBus);
-      if (n.type === 'long') Audio.sfx('hit', 0.3, run.t0 + n.t + n.d, Audio.hitBus);
+      if (isHold(n)) Audio.sfx('hit', 0.3, run.t0 + n.t + n.d, Audio.hitBus);
     }
   }
 
@@ -331,27 +334,29 @@ function step() {
     if (n.t > t + S.lead + 0.1) break;
     if (!n.judged && n.t <= t) {
       n.judged = true;
-      if (n.type !== 'long') n.done = true;
+      if (!isHold(n)) n.done = true;
       if (!p.dead) {
         judge(n);
         if (n.type === 'tap' && n.lanes.some(overlap)) damage(n);
         if (n.type === 'gate' && !(p.slide > 0 || p.slideAmt > 0.6)) damage(n);
       }
     }
-    if (n.type === 'long' && n.judged && !n.done) {
+    if (isHold(n) && n.judged && !n.done) {
       if (t >= n.t + n.d) {
         n.done = true;
         if (!p.dead) judge(n, true);
       } else if (!p.dead) {
-        if (!n.hitPlayer && overlap(n.lanes[0])) damage(n);
-        R.laneFlash[n.lanes[0]] = Math.max(R.laneFlash[n.lanes[0]], 0.7);
+        const hx = holdX(n, t);
+        if (!n.hitPlayer && Math.abs(p.x - hx) < HIT_RANGE) damage(n);
+        const ln = Math.max(0, Math.min(3, Math.round(hx + 1.5)));
+        R.laneFlash[ln] = Math.max(R.laneFlash[ln], 0.7);
         if (Math.random() < 0.5) {
-          const [x, y] = R.proj(laneX(n.lanes[0]), 0.05, 0);
-          R.particles.push({ x: x + (Math.random() - 0.5) * 30, y, vx: (Math.random() - 0.5) * 120, vy: -150 - Math.random() * 200, life: 0.4, max: 0.4, c: LANE_COLORS[n.lanes[0]], r: 2.5 });
+          const [x, y] = R.proj(hx, 0.05, 0);
+          R.particles.push({ x: x + (Math.random() - 0.5) * 30, y, vx: (Math.random() - 0.5) * 120, vy: -150 - Math.random() * 200, life: 0.4, max: 0.4, c: LANE_COLORS[ln], r: 2.5 });
         }
       }
     }
-    if (!(n.done && n.type !== 'long')) vis.push(n);
+    if (!(n.done && !isHold(n))) vis.push(n);
   }
   S.visible = vis;
 
@@ -391,15 +396,15 @@ if (BOT || new URLSearchParams(location.search).has('debug')) window.__S = S;
 let botPlan = null;
 function planRoute(notes) {
   const per = 0.1;
-  const longs = notes.filter((n) => n.type === 'long');
+  const longs = notes.filter(isHold);
   const ev = notes.filter((n) => n.type !== 'gate');
   const Fs = [];
   let F = [0, 1, 2, 3], tp = 0;
   for (const n of ev) {
-    const walls = longs.filter((L) => L.t < n.t && L.t + L.d > tp).map((L) => L.lanes[0]);
+    const walls = longs.filter((L) => L.t < n.t && L.t + L.d > tp).flatMap((L) => L.lanes);
     const steps = Math.floor((n.t - tp) / per);
     const blocked = new Set(n.lanes);
-    for (const L of longs) if (L !== n && L.t <= n.t && L.t + L.d >= n.t) blocked.add(L.lanes[0]);
+    for (const L of longs) if (L !== n && L.t <= n.t && L.t + L.d >= n.t) for (const l of L.lanes) blocked.add(l);
     const ok = [];
     for (let l = 0; l < 4; l++) {
       if (blocked.has(l) || walls.includes(l)) continue;

@@ -57,7 +57,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(env(safe-area-inset-top) + 7vh) 16px calc(env(safe-area-inset-bottom) + 16px);
+  padding: calc(env(safe-area-inset-top) + 4vh) 16px calc(env(safe-area-inset-bottom) + 16px);
   background: linear-gradient(180deg, rgba(5, 3, 12, 0.15), rgba(5, 3, 12, 0.1) 40%, rgba(5, 3, 12, 0.7) 75%);
   overflow-y: auto;
 }
@@ -83,7 +83,7 @@ button {
 }
 .tag { margin: 12px 0 0; font-size: 15px; color: #e7dcff; text-shadow: 0 1px 4px #000; }
 .tag b { color: var(--orange); }
-.songs { margin-top: auto; width: 100%; display: grid; gap: 10px; padding-top: 24px; }
+.songs { margin-top: auto; width: 100%; display: grid; gap: 7px; padding-top: 16px; }
 .song {
   --c: var(--cyan);
   display: grid;
@@ -91,7 +91,7 @@ button {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 12px;
   text-align: left;
   border-radius: 14px;
   background: linear-gradient(90deg, color-mix(in srgb, var(--c) 22%, transparent), rgba(15, 8, 35, 0.85) 45%);
@@ -183,6 +183,7 @@ button {
 .kinds i { flex: none; width: 40px; height: 12px; border-radius: 3px; }
 .k-tap { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
 .k-long { background: linear-gradient(90deg, var(--orange), transparent); height: 10px !important; }
+.k-sweep { background: linear-gradient(90deg, var(--cyan), var(--pink)); transform: skewX(-35deg); height: 10px !important; box-shadow: 0 0 8px var(--pink); }
 .k-gate { background: repeating-linear-gradient(-45deg, var(--red) 0 6px, #5a0020 6px 10px); box-shadow: 0 0 8px var(--red); }
 
 /* ─── 読み込み ─── */

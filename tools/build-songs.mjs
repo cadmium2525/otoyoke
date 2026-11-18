@@ -41,13 +41,20 @@ export const SONGS = [
   { id: 'easy', title: 'Neon Step', diff: 'EASY', level: 3, color: '#29e6ff', style: 'pop', bpm: 112, seconds: 80, seed: 2 },
   { id: 'normal', title: 'Laser Parade', diff: 'NORMAL', level: 6, color: '#ff3fd0', style: 'edm', bpm: 126, seconds: 92, seed: 3 },
   { id: 'hard', title: 'Pixel Overdrive', diff: 'HARD', level: 9, color: '#ffb52e', style: '8bit', bpm: 152, seconds: 90, seed: 5 },
+  { id: 'sugar', title: 'Sugar Rush', diff: 'EASY', level: 2, color: '#7dffb0', style: 'kawaii', bpm: 124, seconds: 78, seed: 4 },
+  { id: 'sakura', title: 'Sakura Drift', diff: 'NORMAL', level: 5, color: '#ff8fb8', style: 'wafu', bpm: 96, seconds: 88, seed: 7 },
+  { id: 'funk', title: 'Midnight Groove', diff: 'NORMAL', level: 7, color: '#b066ff', style: 'funk', bpm: 112, seconds: 90, seed: 2 },
+  { id: 'rock', title: 'Thunder Riff', diff: 'HARD', level: 8, color: '#ff6b3b', style: 'rock', bpm: 140, seconds: 92, seed: 4 },
+  { id: 'trap', title: 'Dark Pulse', diff: 'EXPERT', level: 11, color: '#ff3b6b', style: 'trap', bpm: 142, seconds: 92, seed: 6 },
 ];
 
 // 難しさごとの譜面の作り方
 const DIFF = {
-  EASY: { grid: 1, threshold: 2.9, minGap: 0.5, moveTime: 0.24, doubles: 99, gateEvery: 32, longMin: 2, lead: 2.0, gateClear: 0.7, intro: 0.3 },
-  NORMAL: { grid: 0.5, threshold: 2.3, minGap: 0.3, moveTime: 0.17, doubles: 5.5, gateEvery: 12, longMin: 1.5, lead: 1.7, gateClear: 0.45, intro: 0.5 },
-  HARD: { grid: 0.25, threshold: 2.2, minGap: 0.2, moveTime: 0.13, doubles: 4.5, gateEvery: 8, longMin: 1.5, lead: 1.45, gateClear: 0.35, intro: 0.7 },
+  // sweepBars: 何小節ごとにスライドノーツ（斜めに流れる）を置くか、sweepBeats: その長さ（拍）、sweepSpan: 何列ぶん動くか
+  EASY: { grid: 1, threshold: 2.9, minGap: 0.5, moveTime: 0.24, doubles: 99, gateEvery: 32, longMin: 2, lead: 2.0, gateClear: 0.7, intro: 0.3, sweepBars: 4, sweepBeats: 2, sweepSpan: [1, 1] },
+  NORMAL: { grid: 0.5, threshold: 2.3, minGap: 0.3, moveTime: 0.17, doubles: 5.5, gateEvery: 12, longMin: 1.5, lead: 1.7, gateClear: 0.45, intro: 0.5, sweepBars: 4, sweepBeats: 2, sweepSpan: [1, 2] },
+  HARD: { grid: 0.25, threshold: 2.2, minGap: 0.2, moveTime: 0.13, doubles: 4.5, gateEvery: 8, longMin: 1.5, lead: 1.45, gateClear: 0.35, intro: 0.7, sweepBars: 2, sweepBeats: 1.5, sweepSpan: [1, 2] },
+  EXPERT: { grid: 0.25, threshold: 1.9, minGap: 0.17, moveTime: 0.11, doubles: 4, gateEvery: 8, longMin: 1.5, lead: 1.3, gateClear: 0.32, intro: 0.8, sweepBars: 2, sweepBeats: 1, sweepSpan: [2, 2] },
 };
 // 場面ごとの「しきい値」の足し引き（大きいほど音符が少ない）
 const SECTION_BIAS = { intro: 1.6, A: 0.4, B: -0.3, bridge: 1.0, outro: 0.8, ending: 99 };
@@ -168,7 +175,7 @@ function makeChart(song, def) {
   const LANES = 4;
   let F = new Set([0, 1, 2, 3]);
   let tPrev = 0;
-  const longs = []; // { lane, t0, t1 }
+  const longs = []; // ロング・スライドノーツ { lanes, t0, t1 }
   const notes = [];
   let lastGate = -99;
   let prevLane = 1;
@@ -187,17 +194,15 @@ function makeChart(song, def) {
   const tryPlace = (t, lanes, isLong, dur) => {
     const g = t - tPrev;
     const steps = Math.floor(g / P.moveTime);
-    const walls = new Set(longs.filter((L) => L.t0 < t + 0.05 && L.t1 > tPrev - 0.05).map((L) => L.lane));
+    const walls = new Set(longs.filter((L) => L.t0 < t + 0.05 && L.t1 > tPrev - 0.05).flatMap((L) => L.lanes));
     const R = reach(F, steps, walls);
     const blocked = new Set(lanes);
-    for (const L of longs) if (L.t0 <= t && L.t1 >= t - 0.05) blocked.add(L.lane);
+    for (const L of longs) if (L.t0 <= t && L.t1 >= t - 0.05) for (const l of L.lanes) blocked.add(l);
     const F2 = new Set([...R].filter((l) => !blocked.has(l)));
     if (!F2.size) return false;
-    // 長いノーツは、その間ずっと別の列にいられること（列をまたげない）
-    if (isLong && [...F2].every((l) => l === lanes[0])) return false;
     F = F2;
     tPrev = t;
-    if (isLong) longs.push({ lane: lanes[0], t0: t, t1: t + dur });
+    if (isLong) longs.push({ lanes, t0: t, t1: t + dur });
     return true;
   };
 
@@ -233,22 +238,41 @@ function makeChart(song, def) {
     } else {
       want = Math.floor(rand() * 4);
     }
-    const isLong = !!(c.mel && c.mel.d >= P.longMin && c.sec.name !== 'intro');
-    const dur = isLong ? Math.min(c.mel.d * spb * 0.85, 2.4) : 0;
+    let isLong = !!(c.mel && c.mel.d >= P.longMin && c.sec.name !== 'intro');
+    let dur = isLong ? Math.min(c.mel.d * spb * 0.85, 2.4) : 0;
+    // スライドノーツ：フレーズの終わりの小節の頭、または伸ばすメロディの半分
+    const inBar = c.b % bpb, bar = Math.floor(c.b / bpb + 1e-6);
+    const phraseEnd = Math.abs(inBar) < 1e-6 && (bar - Math.round(c.sec.at / bpb)) % P.sweepBars === P.sweepBars - 1 && (c.sec.name === 'A' || c.sec.name === 'B' || c.sec.name === 'outro');
+    const isSweep = c.sec.name !== 'intro' && (phraseEnd || (isLong && rand() < 0.5));
+    if (isSweep && !isLong) dur = Math.max(0.75, P.sweepBeats * spb);
+    if (isSweep) isLong = true;
+    if (isSweep && [...gateBeats].some((gb) => gb > c.b && gb * spb < t + dur + P.gateClear)) continue;
     const double = !isLong && c.score >= P.doubles;
 
     // 候補の列を、望ましい順に試す
     const order = [want, want + 1, want - 1, want + 2, want - 2, want + 3, want - 3].filter((l) => l >= 0 && l < 4);
     let placed = false;
-    for (const l of order) {
+    for (let l of order) {
       let lanes = [l];
-      if (double) {
+      let sweep = null;
+      if (isSweep) {
+        const span = P.sweepSpan[0] + Math.floor(rand() * (P.sweepSpan[1] - P.sweepSpan[0] + 1));
+        let dir = c.pitch != null && prevPitch != null ? Math.sign(c.pitch - prevPitch) || (rand() < 0.5 ? -1 : 1) : rand() < 0.5 ? -1 : 1;
+        if (l + dir * span < 0 || l + dir * span > 3) dir = -dir;
+        const to = Math.max(0, Math.min(3, l + dir * span));
+        if (to === l) continue;
+        sweep = { from: l, to };
+        lanes = [];
+        for (let k = Math.min(l, to); k <= Math.max(l, to); k++) lanes.push(k);
+      } else if (double) {
         const other = l <= 1 ? l + 1 + (rand() < 0.5 ? 1 : 0) : l - 1 - (rand() < 0.5 ? 1 : 0);
         lanes = [l, Math.max(0, Math.min(3, other))].filter((v, i, a) => a.indexOf(v) === i).sort();
       }
       if (tryPlace(t, lanes, isLong, dur)) {
-        const n = { t, type: isLong ? 'long' : 'tap', lanes };
+        const n = { t, type: sweep ? 'sweep' : isLong ? 'long' : 'tap', lanes };
         if (isLong) n.d = dur;
+        if (sweep) Object.assign(n, sweep);
+        if (sweep) l = sweep.to;
         notes.push(n);
         prevLane = l;
         if (c.pitch != null) prevPitch = c.pitch;
@@ -263,7 +287,7 @@ function makeChart(song, def) {
   }
   // 長いノーツの最中に「くぐるバー」が重なっていたら、長いノーツを短くする
   for (const n of notes) {
-    if (n.type !== 'long') continue;
+    if (n.type !== 'long' && n.type !== 'sweep') continue;
     const g = notes.find((x) => x.type === 'gate' && x.t > n.t && x.t < n.t + n.d + 0.3);
     if (g) n.d = Math.max(0.2, g.t - n.t - 0.4);
   }
@@ -313,11 +337,12 @@ for (const def of SONGS) {
   const chart = makeChart(song, def);
   chart.duration = +(song.bars * beatsPerBar(song) * 60 / song.bpm + (song.tail ?? 3)).toFixed(3);
   writeFileSync(join(ROOT, `songs/${def.id}.json`), JSON.stringify(chart));
-  const c = { tap: 0, long: 0, gate: 0, double: 0 };
-  for (const n of chart.notes) { c[n.type]++; if (n.lanes.length === 2) c.double++; }
-  console.log(`  譜面 ${def.diff}: ${chart.notes.length} ノーツ（タップ ${c.tap}・2列 ${c.double}・ロング ${c.long}・くぐる ${c.gate}）`);
+  const c = { tap: 0, long: 0, sweep: 0, gate: 0, double: 0 };
+  for (const n of chart.notes) { c[n.type]++; if (n.type === 'tap' && n.lanes.length === 2) c.double++; }
+  console.log(`  譜面 ${def.diff}: ${chart.notes.length} ノーツ（タップ ${c.tap}・2列 ${c.double}・ロング ${c.long}・スライド ${c.sweep}・くぐる ${c.gate}）`);
   list.push(summary(def, chart));
 }
+list.sort((a, b) => a.level - b.level);
 writeFileSync(join(ROOT, 'songs/index.json'), JSON.stringify(list, null, 1));
 
 function summary(def, chart) {

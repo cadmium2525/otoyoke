@@ -4,6 +4,12 @@
 export const LANE_COLORS = ['#29e6ff', '#ff3fd0', '#b066ff', '#ffb52e'];
 export const GATE_COLOR = '#ff3b6b';
 export const laneX = (l) => l - 1.5;
+// 時刻 t に判定ライン上でノーツがいる横位置（スライドノーツは from → to へ斜めに動く）
+export function holdX(n, t) {
+  if (n.type !== 'sweep') return laneX(n.lanes[0]);
+  const k = Math.max(0, Math.min(1, (t - n.t) / n.d));
+  return laneX(n.from) + (laneX(n.to) - laneX(n.from)) * k;
+}
 
 export const Z_FAR = 34;
 const CAM_D = 5.5;
@@ -481,7 +487,10 @@ export class Renderer {
     for (let i = list.length - 1; i >= 0; i--) {
       const n = list[i];
       const z = ((n.t - S.songTime) / S.lead) * zF;
-      if (n.type === 'long') {
+      if (n.type === 'sweep') {
+        if (n.t + n.d < S.songTime) continue;
+        this.drawSweep(g, n, S);
+      } else if (n.type === 'long') {
         const z1 = ((n.t + n.d - S.songTime) / S.lead) * zF;
         if (z1 < 0) continue;
         this.drawLong(g, n, Math.max(0, z), Math.min(z1, zF), z < 0);
@@ -599,6 +608,63 @@ export class Renderer {
     g.restore();
     if (!active) this.drawTap(g, lane, z0);
     if (z1 < Z_FAR) this.drawCap(g, lane, z1);
+  }
+
+  drawSweep(g, n, S) {
+    const zF = Z_FAR;
+    const ta = Math.max(n.t, S.songTime);
+    const tb = Math.min(n.t + n.d, S.songTime + S.lead);
+    if (tb <= ta) return;
+    const active = n.t < S.songTime;
+    const zOf = (tt) => ((tt - S.songTime) / S.lead) * zF;
+    const steps = 14;
+    const L = [], Rr = [], mid = [];
+    for (let i = 0; i <= steps; i++) {
+      const tt = ta + ((tb - ta) * i) / steps;
+      const z = zOf(tt), x = holdX(n, tt);
+      L.push(this.proj(x - 0.36, 0.03, z));
+      Rr.push(this.proj(x + 0.36, 0.03, z));
+      mid.push(this.proj(x, 0.03, z));
+    }
+    const ca = LANE_COLORS[n.from], cb = LANE_COLORS[n.to];
+    const poly = L.concat(Rr.slice().reverse());
+    g.save();
+    g.globalAlpha = clamp((zF - zOf(ta)) / 6, 0, 1);
+    const gr = g.createLinearGradient(mid[0][0], mid[0][1], mid[steps][0], mid[steps][1]);
+    gr.addColorStop(0, hexA(active ? cb : ca, active ? 0.75 : 0.55));
+    gr.addColorStop(1, hexA(cb, 0.35));
+    g.fillStyle = gr;
+    this.quad(g, poly);
+    g.fill();
+    g.globalCompositeOperation = 'lighter';
+    g.lineJoin = 'round';
+    for (const edge of [L, Rr]) {
+      for (const [w, a] of [[Math.max(3, edge[0][2] * 0.12), 0.35], [Math.max(1, edge[0][2] * 0.035), 1]]) {
+        g.strokeStyle = a === 1 ? '#ffffff' : hexA(cb, a);
+        g.lineWidth = w;
+        g.beginPath();
+        g.moveTo(edge[0][0], edge[0][1]);
+        for (let i = 1; i < edge.length; i++) g.lineTo(edge[i][0], edge[i][1]);
+        g.stroke();
+      }
+    }
+    // 進む向きの矢印（ノーツの動く方向へ）
+    const dir = Math.sign(n.to - n.from);
+    g.strokeStyle = hexA('#ffffff', 0.85);
+    for (let i = 1; i < steps; i += 3) {
+      const [x, y, sc] = mid[i];
+      if (sc < 12) continue;
+      const a = sc * 0.12;
+      g.lineWidth = Math.max(1.5, sc * 0.04);
+      g.beginPath();
+      g.moveTo(x - dir * a * 0.6, y - a * 0.45);
+      g.lineTo(x + dir * a * 0.6, y);
+      g.lineTo(x - dir * a * 0.6, y + a * 0.45);
+      g.stroke();
+    }
+    g.restore();
+    if (!active) this.drawTap(g, n.from, zOf(n.t));
+    if (zOf(n.t + n.d) < zF) this.drawCap(g, n.to, zOf(n.t + n.d));
   }
 
   drawCap(g, lane, z) {

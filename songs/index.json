@@ -1,5 +1,15 @@
 [
  {
+  "id": "sugar",
+  "title": "Sugar Rush",
+  "diff": "EASY",
+  "level": 2,
+  "color": "#7dffb0",
+  "bpm": 124,
+  "length": 75,
+  "notes": 70
+ },
+ {
   "id": "easy",
   "title": "Neon Step",
   "diff": "EASY",
@@ -10,6 +20,16 @@
   "notes": 94
  },
  {
+  "id": "sakura",
+  "title": "Sakura Drift",
+  "diff": "NORMAL",
+  "level": 5,
+  "color": "#ff8fb8",
+  "bpm": 96,
+  "length": 85,
+  "notes": 116
+ },
+ {
   "id": "normal",
   "title": "Laser Parade",
   "diff": "NORMAL",
@@ -17,7 +37,27 @@
   "color": "#ff3fd0",
   "bpm": 126,
   "length": 90,
-  "notes": 156
+  "notes": 155
+ },
+ {
+  "id": "funk",
+  "title": "Midnight Groove",
+  "diff": "NORMAL",
+  "level": 7,
+  "color": "#b066ff",
+  "bpm": 112,
+  "length": 88,
+  "notes": 127
+ },
+ {
+  "id": "rock",
+  "title": "Thunder Riff",
+  "diff": "HARD",
+  "level": 8,
+  "color": "#ff6b3b",
+  "bpm": 140,
+  "length": 82,
+  "notes": 221
  },
  {
   "id": "hard",
@@ -27,6 +67,16 @@
   "color": "#ffb52e",
   "bpm": 152,
   "length": 82,
-  "notes": 174
+  "notes": 173
+ },
+ {
+  "id": "trap",
+  "title": "Dark Pulse",
+  "diff": "EXPERT",
+  "level": 11,
+  "color": "#ff3b6b",
+  "bpm": 142,
+  "length": 90,
+  "notes": 183
  }
 ]

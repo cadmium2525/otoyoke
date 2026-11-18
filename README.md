@@ -17,10 +17,22 @@
 
 - **床のノーツ**：横によける。判定ライン（棒人間の足元）に来た瞬間に同じ列にいると被弾
 - **ロングノーツ**：終わるまでその列に入らない（またいで移動もできない）
+- **スライドノーツ**：判定ラインの上を斜めに流れて列をまたぐ。動く帯の通り道に入らない
 - **高いバー（しま模様）**：スライディングでくぐる
 - HP は 5。0 になると失敗。ノーダメージでクリアすると S ランク
 
-収録曲：EASY「Neon Step」（ポップ）／ NORMAL「Laser Parade」（EDM）／ HARD「Pixel Overdrive」（8bit）
+収録曲（8 曲）：
+
+| 難しさ | 曲 | スタイル |
+| --- | --- | --- |
+| EASY Lv.2 | Sugar Rush | かわいい |
+| EASY Lv.3 | Neon Step | ポップ |
+| NORMAL Lv.5 | Sakura Drift | 和風 |
+| NORMAL Lv.6 | Laser Parade | EDM |
+| NORMAL Lv.7 | Midnight Groove | ファンク |
+| HARD Lv.8 | Thunder Riff | ロック |
+| HARD Lv.9 | Pixel Overdrive | 8bit |
+| EXPERT Lv.11 | Dark Pulse | トラップ |
 
 ## 公開方法（GitHub Pages・0円）
 
