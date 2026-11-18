@@ -14,8 +14,8 @@ export const Audio = {
 
   init() {
     if (this.ctx) return;
-    // iPhone のマナーモードでも鳴らす（Safari 16.4+）
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
+    // iPhone のマナーモード中は鳴らさない（Safari 16.4+ の audioSession。ambient = 消音スイッチに従う）
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch {}
     this.ctx = new AC({ latencyHint: 'interactive' });
     this.master = this.ctx.createGain();
     this.master.connect(this.ctx.destination);
