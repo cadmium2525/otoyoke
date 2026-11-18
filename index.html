@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0620">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="音避け">
+<meta name="description" content="音ゲーのノーツを棒人間でよけ続けるリズムアクション。">
+<title>音避け OTOYOKE</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="title">
+<div id="app">
+  <canvas id="game"></canvas>
+  <div id="touch"></div>
+
+  <!-- タイトル -->
+  <section id="title" class="screen">
+    <h1 class="logo"><span class="jp">音避け</span><span class="en">OTOYOKE</span></h1>
+    <p class="tag">ノーツは<b>よける</b>もの。</p>
+    <div id="songs" class="songs"><p class="dim">読み込み中…</p></div>
+    <div class="row small">
+      <button id="btn-howto" class="ghost">遊び方</button>
+      <button id="opt-hit" class="ghost">ヒット音：ON</button>
+      <button id="opt-vibe" class="ghost">振動：ON</button>
+    </div>
+    <p class="credit">BGM・効果音：かなでる（mp4mp3）で自動作曲</p>
+  </section>
+
+  <!-- 遊び方 -->
+  <div id="howto" class="modal" hidden>
+    <div class="card">
+      <h2>遊び方</h2>
+      <p>音ゲーは<b>オートでフルコンボ</b>。あなたの仕事は、流れてくるノーツから棒人間を守ること。</p>
+      <ul class="how">
+        <li><span class="key">◀ ▶</span><span>列を移動<br><small>左右スワイプ／画面の左右をタップでもOK</small></span></li>
+        <li><span class="key">▼</span><span>スライディング<br><small>下スワイプでもOK</small></span></li>
+      </ul>
+      <div class="kinds">
+        <div><i class="k-tap"></i><span><b>床のノーツ</b>：横によける</span></div>
+        <div><i class="k-long"></i><span><b>ロングノーツ</b>：終わるまでその列に入らない</span></div>
+        <div><i class="k-gate"></i><span><b>高いバー</b>：スライディングでくぐる</span></div>
+      </div>
+      <p class="dim">ノーツが判定ライン（棒人間の足元）に来た瞬間に同じ列にいると被弾。HP が 0 になると失敗です。キーボードは ← → ↓（スペース）。</p>
+      <button id="btn-howto-close" class="primary">OK</button>
+    </div>
+  </div>
+
+  <!-- 読み込み -->
+  <section id="loading" class="screen" hidden>
+    <div class="loader"><i></i><i></i><i></i><i></i></div>
+    <p id="loading-title"></p>
+    <p class="dim">LOADING…</p>
+  </section>
+
+  <!-- プレイ中 -->
+  <section id="play" class="screen" hidden>
+    <div id="progress"><i></i></div>
+    <div class="hud-left">
+      <div class="label">SCORE</div>
+      <div id="score">0000000</div>
+      <div id="hp"></div>
+    </div>
+    <div class="hud-right">
+      <div class="label">COMBO</div>
+      <div id="combo">0</div>
+    </div>
+    <button id="btn-pause" aria-label="一時停止"><i></i><i></i></button>
+    <div id="auto">AUTO PLAY</div>
+    <div id="countdown" hidden></div>
+    <div id="warn" hidden>▼ SLIDE!</div>
+    <div class="controls">
+      <button id="btn-left" aria-label="左へ">◀</button>
+      <button id="btn-slide" aria-label="スライディング">▼<small>SLIDE</small></button>
+      <button id="btn-right" aria-label="右へ">▶</button>
+    </div>
+  </section>
+
+  <!-- 一時停止 -->
+  <section id="pause" class="screen" hidden>
+    <div class="card">
+      <h2>PAUSE</h2>
+      <button id="btn-resume" class="primary">つづける</button>
+      <button id="btn-retry">やりなおす</button>
+      <button id="btn-quit">曲選択へ</button>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="result" class="screen" hidden>
+    <div class="card result">
+      <h2 id="res-title"></h2>
+      <p id="res-song" class="dim"></p>
+      <div id="res-rank" class="rank big"></div>
+      <p id="res-new" class="newrec" hidden>NEW RECORD!</p>
+      <p id="res-auto" class="auto"></p>
+      <dl>
+        <dt>被弾</dt><dd id="res-hits"></dd>
+        <dt>回避率</dt><dd id="res-dodge"></dd>
+        <dt>残り HP</dt><dd id="res-hp"></dd>
+      </dl>
+      <button id="btn-again" class="primary">もう一度</button>
+      <button id="btn-back">曲選択へ</button>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+[
+ {
+  "id": "easy",
+  "title": "Neon Step",
+  "diff": "EASY",
+  "level": 3,
+  "color": "#29e6ff",
+  "bpm": 112,
+  "length": 77,
+  "notes": 94
+ },
+ {
+  "id": "normal",
+  "title": "Laser Parade",
+  "diff": "NORMAL",
+  "level": 6,
+  "color": "#ff3fd0",
+  "bpm": 126,
+  "length": 90,
+  "notes": 156
+ },
+ {
+  "id": "hard",
+  "title": "Pixel Overdrive",
+  "diff": "HARD",
+  "level": 9,
+  "color": "#ffb52e",
+  "bpm": 152,
+  "length": 82,
+  "notes": 174
+ }
+]
