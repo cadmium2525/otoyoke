@@ -58,7 +58,6 @@ const SFX = {
   damage: { preset: 'damage', space: 0.2 },
   slide: { preset: 'swish', length: 0.9, tone: 0.2 },
   move: { preset: 'swipe', length: 0.5, tone: 0.4 },
-  count: { preset: 'onebeep' },
   go: { preset: 'kettei', pitch: 5 },
   clear: { preset: 'levelup', space: 0.3 },
   fail: { preset: 'gameover', space: 0.3 },
