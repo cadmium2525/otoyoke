@@ -4,6 +4,27 @@
 export const LANE_COLORS = ['#29e6ff', '#ff3fd0', '#b066ff', '#ffb52e'];
 export const GATE_COLOR = '#ff3b6b';
 export const laneX = (l) => l - 1.5;
+// 拍 ⇔ 秒。手持ちの曲は beatTimes（4 分音符の時刻の表）でテンポの揺れに対応する
+export function beatToTime(c, b) {
+  const T = c.beatTimes;
+  if (!T) return (b * 60) / c.bpm;
+  const L = T.length - 1;
+  if (b <= 0) return T[0] + b * (T[1] - T[0]);
+  if (b >= L) return T[L] + (b - L) * (T[L] - T[L - 1]);
+  const i = Math.floor(b);
+  return T[i] + (T[i + 1] - T[i]) * (b - i);
+}
+export function timeToBeat(c, t) {
+  const T = c.beatTimes;
+  if (!T) return (t * c.bpm) / 60;
+  const L = T.length - 1;
+  if (t <= T[0]) return (t - T[0]) / (T[1] - T[0]);
+  if (t >= T[L]) return L + (t - T[L]) / (T[L] - T[L - 1]);
+  let lo = 0, hi = L;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T[m] <= t) lo = m; else hi = m; }
+  return lo + (t - T[lo]) / (T[lo + 1] - T[lo]);
+}
+
 // 時刻 t に判定ライン上でノーツがいる横位置（スライドノーツは from → to へ斜めに動く）
 export function holdX(n, t) {
   if (n.type !== 'sweep') return laneX(n.lanes[0]);
@@ -400,11 +421,10 @@ export class Renderer {
 
     // 拍の線（小節線は明るく）
     if (S.chart) {
-      const spb = 60 / S.chart.bpm;
-      const b0 = Math.ceil((S.songTime - 0.3) / spb);
-      const b1 = Math.floor((S.songTime + S.lead) / spb);
+      const b0 = Math.ceil(timeToBeat(S.chart, S.songTime - 0.3));
+      const b1 = Math.floor(timeToBeat(S.chart, S.songTime + S.lead));
       for (let b = b0; b <= b1; b++) {
-        const z = ((b * spb - S.songTime) / S.lead) * zF;
+        const z = ((beatToTime(S.chart, b) - S.songTime) / S.lead) * zF;
         if (z < zN || z > zF) continue;
         const bar = b % S.chart.beatsPerBar === 0;
         const [l0x, l0y] = P(-ROAD_HALF, 0, z), [l1x] = P(ROAD_HALF, 0, z);

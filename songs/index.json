@@ -78,5 +78,15 @@
   "bpm": 142,
   "length": 90,
   "notes": 183
+ },
+ {
+  "id": "upload",
+  "title": "Uploaded Track",
+  "diff": "MASTER",
+  "level": 13,
+  "color": "#ffffff",
+  "bpm": 93,
+  "length": 227,
+  "notes": 757
  }
 ]

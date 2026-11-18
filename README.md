@@ -21,7 +21,7 @@
 - **高いバー（しま模様）**：スライディングでくぐる
 - HP は 5。0 になると失敗。ノーダメージでクリアすると S ランク
 
-収録曲（8 曲）：
+収録曲（9 曲）：
 
 | 難しさ | 曲 | スタイル |
 | --- | --- | --- |
@@ -33,6 +33,7 @@
 | HARD Lv.8 | Thunder Riff | ロック |
 | HARD Lv.9 | Pixel Overdrive | 8bit |
 | EXPERT Lv.11 | Dark Pulse | トラップ |
+| MASTER Lv.13 | Uploaded Track | 手持ちの曲を解析して取り込み |
 
 ## 公開方法（GitHub Pages・0円）
 
@@ -59,6 +60,17 @@ node tools/check-charts.mjs                         # すべての譜面がよ�
 譜面は「メロディ・キック・スネア・クラッシュ」の位置から作り、メロディが上がれば右、下がれば左にノーツが出ます。
 置くたびに「プレイヤーがたどり着ける列」を計算して、必ずよけられる配置だけを残しています。
 
+## 手持ちの曲を入れる
+
+```sh
+node tools/import-song.mjs 曲.mp3 --id myso --title "曲名" --diff MASTER --level 13 --color "#ffffff"
+```
+
+曲を解析して（テンポ・拍の位置・音の立ち上がり・盛り上がり）、譜面を自動で作ります。
+テンポが途中で揺れる・だんだん速くなる曲でも、拍の位置を曲全体でたどる（動的計画法のビートトラッキング）ので、ノーツは音に合います。
+難しさ（`--diff`）ごとに目安の密度（MASTER は 1 秒に約 3.3 個）になるよう自動で調整し、必ずよけきれる配置だけを残します。
+公開すると曲の MP3 も誰でも聞ける状態になるので、公開してよい曲だけを入れてください。
+
 ## 構成
 
 - `index.html` / `css/style.css` — 画面
@@ -67,6 +79,6 @@ node tools/check-charts.mjs                         # すべての譜面がよ�
 - `js/audio.js` — Web Audio API（曲の再生と時刻、効果音、スペクトラム）
 - `songs/` — BGM（MP3）・譜面（JSON）・曲の JSON（`src/`、かなでるで開ける）
 - `sfx/` — 効果音（かなでるの効果音プリセット）
-- `tools/` — 曲と譜面を作るスクリプト
+- `tools/` — 曲と譜面を作るスクリプト（`build-songs.mjs` かなでるの曲、`import-song.mjs` 手持ちの曲、`chartgen.mjs` 譜面の生成、`audio-analyze.mjs` 音の解析、`check-charts.mjs` よけきれるかの確認）
 
 開発用：URL に `?bot` を付けると、譜面から通り道を計算して自動でよけます（譜面の確認用）。

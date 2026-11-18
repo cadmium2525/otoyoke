@@ -1,5 +1,5 @@
 // 音避け：ゲームの進行・操作
-import { Renderer, LANE_COLORS, GATE_COLOR, laneX, holdX } from './render.js';
+import { Renderer, LANE_COLORS, GATE_COLOR, laneX, holdX, timeToBeat } from './render.js';
 import { Audio } from './audio.js';
 
 const $ = (s) => document.querySelector(s);
@@ -302,7 +302,7 @@ function step() {
   const c = S.chart;
   const t = Audio.now - run.t0 - Audio.latency;
   S.songTime = t;
-  S.beat = (t * c.bpm) / 60;
+  S.beat = timeToBeat(c, t);
   const p = S.player;
   const prev = run.prevT;
   run.prevT = t;
